@@ -25,40 +25,113 @@ after((done) => {
   done()
 })
 
+const SAMPLE_OBJECT_ID = 'aaaaaaaaaaaa'
+const SAMPLE_AUTHOR_ID = 'bbbbbbbbbbbb'
+
 
 describe('Message API endpoints', () => {
     beforeEach((done) => {
-        // TODO: add any beforeEach code here
-        done()
+        
+        const sampleUser = new User({
+            username: 'myuser',
+            password: 'mypassword',
+            _id: SAMPLE_AUTHOR_ID
+        })
+
+        const sampleMessage = new Message({
+            body: 'mybody',
+            title: "mytitle",
+            author: SAMPLE_AUTHOR_ID,
+            _id: SAMPLE_OBJECT_ID
+        })
+        Promise.all([sampleMessage.save(), sampleUser.save()])
+        .then(() => {
+            done()
+        })
     })
 
     afterEach((done) => {
         // TODO: add any afterEach code here
-        done()
+        deletion1 = User.deleteOne({ username: 'myuser'})
+        deletion2 = Message.deleteOne({ _id: SAMPLE_OBJECT_ID })
+        Promise.all([deletion1, deletion2]).then(() => {
+            done()
+        })
     })
 
     it('should load all messages', (done) => {
         // TODO: Complete this
-        done()
+        chai.request(app)
+        .get('/messages')
+        .end((err, res) => {
+            if (err) { done(err) }
+            expect(res).to.have.status(200)
+            done()
+        })
     })
 
     it('should get one specific message', (done) => {
         // TODO: Complete this
-        done()
+        chai.request(app)
+        .get(`/messages/${SAMPLE_OBJECT_ID}`)
+        .end((err, res) => {
+            if (err) { done(err) }
+            expect(res).to.have.status(200)
+            // expect(res.body.body).to.equal('mybody')
+            done()
+        })
     })
 
     it('should post a new message', (done) => {
         // TODO: Complete this
-        done()
+        chai.request(app)
+        .post('/messages')
+        .send({body: 'mybody', title: 'title', author: SAMPLE_AUTHOR_ID})
+        .end((err,res) => {
+            if (err) { done(err)}
+            expect(res.body.message).to.be.an('object')
+            expect(res.body.message).to.have.property('body', 'mybody')
+
+            Message.findOne({body: 'mybody'}).then(message => {
+                expect(message).to.be.an('object')
+                done()
+            }).catch((err) => {
+                if (err) { done(err)}
+                throw err.message
+            })
+        })
     })
 
     it('should update a message', (done) => {
-        // TODO: Complete this
-        done()
+        chai.request(app)
+        .put(`/messages/${SAMPLE_OBJECT_ID}`)
+        .send({body: 'mybody'})
+        .end((err, res) => {
+            if (err) { done(err) }
+            expect(res.body.message).to.be.an('object')
+            expect(res.body.message).to.have.property('body', 'mybody')
+
+            // check that user is actually inserted into database
+            Message.findOne({body: 'mybody'}).then(message => {
+                expect(message).to.be.an('object')
+                done()
+            })
+        })
     })
 
     it('should delete a message', (done) => {
-        // TODO: Complete this
-        done()
+        chai.request(app)
+        .delete(`/messages/${SAMPLE_OBJECT_ID}`)
+        .end((err, res) => {
+            if (err) { done(err) }
+            expect(res.body.message).to.equal("Successfully deleted.")
+            expect(res.body._id).to.equal(SAMPLE_OBJECT_ID)
+
+            Message.findOne({_id: SAMPLE_OBJECT_ID}).then(message => {
+                console.log(message)
+                expect(message).to.equal(null)
+                done()
+            })
+        })
     })
 })
